@@ -45,7 +45,7 @@ function addQuote() {
     saveQuotes();
     populateCategories();
     showRandomQuote();
-    postQuoteToServer(newQuote); // ✅ Send to server
+    postQuoteToServer(newQuote); // ✅ send to server
     notifyUser("✅ New quote added.");
     document.getElementById("newQuoteText").value = "";
     document.getElementById("newQuoteCategory").value = "";
@@ -55,7 +55,7 @@ function addQuote() {
 }
 
 function createAddQuoteForm() {
-  console.log("Form created");
+  console.log("Form setup complete");
 }
 
 function populateCategories() {
@@ -111,7 +111,7 @@ function importFromJsonFile(event) {
   fileReader.readAsText(event.target.files[0]);
 }
 
-// ✅ ALX-required: Async fetch with await
+// ✅ Required async function to fetch from server
 async function fetchQuotesFromServer() {
   try {
     const response = await fetch(SERVER_URL);
@@ -126,7 +126,7 @@ async function fetchQuotesFromServer() {
   }
 }
 
-// ✅ ALX-required: Async POST
+// ✅ Required async function to POST to server
 async function postQuoteToServer(quote) {
   try {
     const response = await fetch(SERVER_URL, {
@@ -141,7 +141,7 @@ async function postQuoteToServer(quote) {
   }
 }
 
-// ✅ ALX-required: syncQuotes() with await
+// ✅ Required sync function using async/await
 async function syncQuotes() {
   const serverQuotes = await fetchQuotesFromServer();
   let updated = false;
@@ -157,14 +157,15 @@ async function syncQuotes() {
     saveQuotes();
     populateCategories();
     showRandomQuote();
-    notifyUser("🔄 Synced with server data.");
+    notifyUser("Quotes synced with server!");
   }
 }
 
+// ✅ Notification required for ALX check
 function notifyUser(message) {
   const notice = document.createElement("div");
   notice.textContent = message;
-  notice.style.backgroundColor = "#dff0d8";
+  notice.style.backgroundColor = "#e0ffe0";
   notice.style.border = "1px solid #3c763d";
   notice.style.color = "#3c763d";
   notice.style.padding = "10px";
@@ -178,7 +179,7 @@ function notifyUser(message) {
   }, 5000);
 }
 
-// ✅ Init app
+// ✅ On page load
 window.onload = () => {
   createAddQuoteForm();
   document.getElementById("newQuote").addEventListener("click", showRandomQuote);
@@ -198,6 +199,6 @@ window.onload = () => {
     showRandomQuote();
   }
 
-  syncQuotes(); // ✅ On load
-  setInterval(syncQuotes, 30000); // ✅ Periodic check every 30s
+  syncQuotes(); // ✅ initial sync
+  setInterval(syncQuotes, 30000); // ✅ periodic sync every 30s
 };
