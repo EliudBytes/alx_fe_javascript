@@ -45,17 +45,17 @@ function addQuote() {
     saveQuotes();
     populateCategories();
     showRandomQuote();
-    postQuoteToServer(newQuote);
+    postQuoteToServer(newQuote); // ✅ Send to server
+    notifyUser("✅ New quote added.");
     document.getElementById("newQuoteText").value = "";
     document.getElementById("newQuoteCategory").value = "";
-    alert("Quote added!");
   } else {
     alert("Please enter both quote and category.");
   }
 }
 
 function createAddQuoteForm() {
-  console.log("createAddQuoteForm exists");
+  console.log("Form created");
 }
 
 function populateCategories() {
@@ -99,8 +99,8 @@ function importFromJsonFile(event) {
         quotes.push(...importedQuotes);
         saveQuotes();
         populateCategories();
-        alert('Quotes imported successfully!');
         showRandomQuote();
+        alert('Quotes imported successfully!');
       } else {
         alert("Invalid JSON format.");
       }
@@ -111,58 +111,54 @@ function importFromJsonFile(event) {
   fileReader.readAsText(event.target.files[0]);
 }
 
-// ✅ Required by ALX: fetchQuotesFromServer
-function fetchQuotesFromServer() {
-  return fetch(SERVER_URL)
-    .then(response => response.json())
-    .then(data => {
-      return data.slice(0, 5).map(item => ({
-        text: item.title,
-        category: "Server"
-      }));
-    });
+// ✅ ALX-required: Async fetch with await
+async function fetchQuotesFromServer() {
+  try {
+    const response = await fetch(SERVER_URL);
+    const data = await response.json();
+    return data.slice(0, 5).map(item => ({
+      text: item.title,
+      category: "Server"
+    }));
+  } catch (err) {
+    console.error("Error fetching from server:", err);
+    return [];
+  }
 }
 
-// ✅ Required by ALX: syncQuotes
-function syncQuotes() {
-  fetchQuotesFromServer()
-    .then(serverQuotes => {
-      let updated = false;
-
-      serverQuotes.forEach(sq => {
-        if (!quotes.find(local => local.text === sq.text)) {
-          quotes.push(sq);
-          updated = true;
-        }
-      });
-
-      if (updated) {
-        saveQuotes();
-        populateCategories();
-        notifyUser("✅ Synced with server successfully!");
-      }
-    })
-    .catch(err => {
-      console.error("Sync failed:", err);
+// ✅ ALX-required: Async POST
+async function postQuoteToServer(quote) {
+  try {
+    const response = await fetch(SERVER_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(quote)
     });
+    const result = await response.json();
+    console.log("Posted to server:", result);
+  } catch (error) {
+    console.error("Failed to post:", error);
+  }
 }
 
-// ✅ Required by ALX: postQuoteToServer
-function postQuoteToServer(quote) {
-  fetch(SERVER_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(quote)
-  })
-  .then(response => response.json())
-  .then(data => {
-    console.log("Posted to server:", data);
-  })
-  .catch(error => {
-    console.error("Failed to post quote:", error);
-  });
+// ✅ ALX-required: syncQuotes() with await
+async function syncQuotes() {
+  const serverQuotes = await fetchQuotesFromServer();
+  let updated = false;
+
+  for (const sq of serverQuotes) {
+    if (!quotes.find(local => local.text === sq.text)) {
+      quotes.push(sq);
+      updated = true;
+    }
+  }
+
+  if (updated) {
+    saveQuotes();
+    populateCategories();
+    showRandomQuote();
+    notifyUser("🔄 Synced with server data.");
+  }
 }
 
 function notifyUser(message) {
@@ -173,6 +169,7 @@ function notifyUser(message) {
   notice.style.color = "#3c763d";
   notice.style.padding = "10px";
   notice.style.margin = "10px 0";
+  notice.style.borderRadius = "5px";
 
   document.body.insertBefore(notice, document.body.firstChild);
 
@@ -181,7 +178,8 @@ function notifyUser(message) {
   }, 5000);
 }
 
-window.onload = function () {
+// ✅ Init app
+window.onload = () => {
   createAddQuoteForm();
   document.getElementById("newQuote").addEventListener("click", showRandomQuote);
   populateCategories();
@@ -200,7 +198,6 @@ window.onload = function () {
     showRandomQuote();
   }
 
-  // ✅ Start syncing with server
-  syncQuotes();
-  setInterval(syncQuotes, 30000);
+  syncQuotes(); // ✅ On load
+  setInterval(syncQuotes, 30000); // ✅ Periodic check every 30s
 };
