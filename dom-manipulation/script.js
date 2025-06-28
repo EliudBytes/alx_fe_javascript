@@ -45,6 +45,7 @@ function addQuote() {
     saveQuotes();
     populateCategories();
     showRandomQuote();
+    postQuoteToServer(newQuote);
     document.getElementById("newQuoteText").value = "";
     document.getElementById("newQuoteCategory").value = "";
     alert("Quote added!");
@@ -110,15 +111,22 @@ function importFromJsonFile(event) {
   fileReader.readAsText(event.target.files[0]);
 }
 
-function syncWithServer() {
-  fetch(SERVER_URL)
+// ✅ Required by ALX: fetchQuotesFromServer
+function fetchQuotesFromServer() {
+  return fetch(SERVER_URL)
     .then(response => response.json())
     .then(data => {
-      const serverQuotes = data.slice(0, 5).map(item => ({
+      return data.slice(0, 5).map(item => ({
         text: item.title,
         category: "Server"
       }));
+    });
+}
 
+// ✅ Required by ALX: syncQuotes
+function syncQuotes() {
+  fetchQuotesFromServer()
+    .then(serverQuotes => {
       let updated = false;
 
       serverQuotes.forEach(sq => {
@@ -131,12 +139,30 @@ function syncWithServer() {
       if (updated) {
         saveQuotes();
         populateCategories();
-        notifyUser("✅ New quotes synced from server.");
+        notifyUser("✅ Synced with server successfully!");
       }
     })
-    .catch(error => {
-      console.error("Server sync failed:", error);
+    .catch(err => {
+      console.error("Sync failed:", err);
     });
+}
+
+// ✅ Required by ALX: postQuoteToServer
+function postQuoteToServer(quote) {
+  fetch(SERVER_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(quote)
+  })
+  .then(response => response.json())
+  .then(data => {
+    console.log("Posted to server:", data);
+  })
+  .catch(error => {
+    console.error("Failed to post quote:", error);
+  });
 }
 
 function notifyUser(message) {
@@ -157,7 +183,6 @@ function notifyUser(message) {
 
 window.onload = function () {
   createAddQuoteForm();
-
   document.getElementById("newQuote").addEventListener("click", showRandomQuote);
   populateCategories();
 
@@ -175,6 +200,7 @@ window.onload = function () {
     showRandomQuote();
   }
 
-  syncWithServer();
-  setInterval(syncWithServer, 30000); // every 30 seconds
+  // ✅ Start syncing with server
+  syncQuotes();
+  setInterval(syncQuotes, 30000);
 };
